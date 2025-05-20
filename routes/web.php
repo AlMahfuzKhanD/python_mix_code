@@ -16,3 +16,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/weight-display', function () {
+    return view('weight.live');
+});
+Route::get('/weight-display-live', function () {
+    return view('weight.weight-display');
+});

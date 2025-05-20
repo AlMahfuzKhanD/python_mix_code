@@ -2,11 +2,12 @@
 
 namespace App\Providers;
 
-use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 
 class RouteServiceProvider extends ServiceProvider
 {
@@ -34,6 +35,12 @@ class RouteServiceProvider extends ServiceProvider
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
         });
+         // ✅ Manually register this one GET route without throttle
+        Route::get('/api/latest-weight', function () {
+            return response()->json([
+                'weight' => Cache::get('latest_weight', '0.000')
+            ]);
+        })->withoutMiddleware(['throttle', 'api']);
     }
 
     /**
@@ -41,8 +48,24 @@ class RouteServiceProvider extends ServiceProvider
      */
     protected function configureRateLimiting(): void
     {
+        // RateLimiter::for('api', function (Request $request) {
+        //     return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        // });
+
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        // ✅ Allow unlimited requests to /api/latest-weight
+        if ($request->is('api/latest-weight')) {
+            return Limit::none();
+        }
+        if ($request->is('api/receive-weight')) {
+            return Limit::none();
+        }
+
+        // ✅ Default limit for all other API routes
+        // return Limit::perMinute(60)->by($request->ip());
+        return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
+
+        
     }
 }
