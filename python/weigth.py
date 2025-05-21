@@ -43,6 +43,13 @@
 
 
 # current code
+
+# headers = {
+#     'X-API-KEY': 'supersecure123'
+# }
+
+# response = requests.post(API_URL, data={'weight': latest_weight}, headers=headers)
+
 import serial
 import requests
 import re
@@ -52,7 +59,8 @@ import time
 PORT = 'COM3'
 BAUD_RATE = 9600
 TIMEOUT = 1
-API_URL = 'http://127.0.0.1:8000/api/receive-weight'
+# API_URL = 'http://127.0.0.1:8000/api/receive-weight'
+API_URL = 'http://cserp.store/api/receive-weight'
 
 def extract_weights(data):
     matches = re.findall(r'\x02([+-]\d{9})\x03', data)
@@ -101,3 +109,7 @@ try:
     ser.close()
 except Exception as e:
     print("Error:", e)
+
+
+# response = requests.post('http://cserp.store/api/test-api', verify=False)
+# print(response.text)
