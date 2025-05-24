@@ -2,6 +2,7 @@ import serial
 import requests
 import re
 import time
+import uuid  # 🔸 For getting MAC address
 
 # Configuration
 PORT = 'COM3'
@@ -16,6 +17,14 @@ HEADERS = {
     'Accept': 'application/json',
     'Content-Type': 'application/x-www-form-urlencoded',
 }
+
+# ✅ Generate machine ID using MAC address
+def get_machine_id():
+    mac = uuid.getnode()
+    return ':'.join(['{:02x}'.format((mac >> ele) & 0xff) for ele in range(40, -1, -8)])
+
+MACHINE_ID = get_machine_id()
+print(f"🔧 Machine ID: {MACHINE_ID}")
 
 def extract_weights(data):
     matches = re.findall(r'\x02([+-]\d{9})\x03', data)
@@ -37,11 +46,14 @@ try:
                 latest_weight = weights[-1]  # Use the last detected weight
 
                 if latest_weight != last_sent_weight:
-                    print(f"📤 Sending: {latest_weight}")
+                    print(f"📤 Sending: {latest_weight} from Machine: {MACHINE_ID}")
                     try:
                         response = requests.post(
                             API_URL,
-                            data={'weight': latest_weight},
+                            data={
+                                'weight': latest_weight,
+                                'machine_id': MACHINE_ID
+                            },
                             headers=HEADERS,
                             verify=True
                         )
